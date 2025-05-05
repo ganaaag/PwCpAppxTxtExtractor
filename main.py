@@ -710,6 +710,57 @@ async def get_cpwp_course_content(session: aiohttp.ClientSession, headers: Dict[
                         logging.warning(f"No URL found for content: {name}")
                         continue
                         
+def transform_classplus_url(original_url: str) -> str | None:
+    if "media-cdn.classplusapp.com/tencent/" in original_url:
+        return original_url.rsplit('/', 1)[0] + "/master.m3u8"
+
+    elif "media-cdn.classplusapp.com" in original_url and original_url.endswith('.jpg'):
+        identifier = original_url.split('/')[-3]
+        return f'https://media-cdn.classplusapp.com/alisg-cdn-a.classplusapp.com/{identifier}/master.m3u8'
+
+    elif "tencdn.classplusapp.com" in original_url and original_url.endswith('.jpg'):
+        identifier = original_url.split('/')[-2]
+        return f'https://media-cdn.classplusapp.com/tencent/{identifier}/master.m3u8'
+
+    elif "4b06bf8d61c41f8310af9b2624459378203740932b456b07fcf817b737fbae27" in original_url and original_url.endswith('.jpeg'):
+        file_part = original_url.split('/')[-1].split('.')[0]
+        return f'https://media-cdn.classplusapp.com/alisg-cdn-a.classplusapp.com/b08bad9ff8d969639b2e43d5769342cc62b510c4345d2f7f153bec53be84fe35/{file_part}/master.m3u8'
+
+    elif "cpvideocdn.testbook.com" in original_url and original_url.endswith('.png'):
+        match = re.search(r'/streams/([a-f0-9]{24})/', original_url)
+        video_id = match.group(1) if match else original_url.split('/')[-2]
+        return f'https://cpvod.testbook.com/{video_id}/playlist.m3u8'
+
+    elif "media-cdn.classplusapp.com/drm/" in original_url and original_url.endswith('.png'):
+        video_id = original_url.split('/')[-3]
+        return f'https://media-cdn.classplusapp.com/drm/{video_id}/playlist.m3u8'
+
+    elif "media-cdn.classplusapp.com" in original_url and any(x in original_url for x in ["cc/", "lc/", "uc/", "dy/"]) and original_url.endswith('.png'):
+        return original_url.replace('thumbnail.png', 'master.m3u8')
+
+    elif "tb-video.classplusapp.com" in original_url and original_url.endswith('.jpg'):
+        video_id = original_url.split('/')[-1].split('.')[0]
+        return f'https://tb-video.classplusapp.com/{video_id}/master.m3u8'
+
+    # NEW RULES
+    elif "media-cdn.classplusapp.com" in original_url and original_url.endswith(('.jpeg', '.jpg', '.png')):
+        identifier = original_url.split('/')[-2]
+        return f'https://media-cdn.classplusapp.com/{identifier}/master.m3u8'
+
+    elif "classplusapp.com/uploads/" in original_url and original_url.endswith(('.jpeg', '.jpg', '.png')):
+        identifier = original_url.split('/')[-2]
+        return f'https://media-cdn.classplusapp.com/uploads/{identifier}/master.m3u8'
+
+    elif "cdn.classplus.co.in" in original_url and original_url.endswith('.jpg'):
+        video_id = original_url.split('/')[-1].split('.')[0]
+        return f'https://cdn.classplus.co.in/{video_id}/master.m3u8'
+
+    elif "tb-thumbnail.classplusapp.com" in original_url and original_url.endswith('.png'):
+        video_id = original_url.split('/')[-1].split('.')[0]
+        return f'https://tb-video.classplusapp.com/{video_id}/master.m3u8'
+
+    return None
+
                     if "media-cdn.classplusapp.com/tencent/" in url_val:
                         url_val = url_val.rsplit('/', 1)[0] + "/master.m3u8"
                     elif "media-cdn.classplusapp.com" in url_val and url_val.endswith('.jpg'):
